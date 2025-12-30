@@ -7,6 +7,13 @@ export interface IUser {
     updatedAt: string;
 }
 
+export interface ITeam {
+    _id: string;
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface IRole {
     _id: string;
     name: string;

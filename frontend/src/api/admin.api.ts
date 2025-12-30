@@ -17,5 +17,16 @@ export const adminApi = {
     getAuditLogs: async (params?: { limit?: number; page?: number }): Promise<any> => {
         const response = await apiClient.get("/audit-logs", { params });
         return response.data;
+    },
+
+    // Teams
+    getTeams: async (): Promise<{ data: { teams: any[] } }> => {
+        const response = await apiClient.get("/teams");
+        return response.data;
+    },
+
+    createTeam: async (name: string): Promise<{ data: { team: any } }> => {
+        const response = await apiClient.post("/teams", { name });
+        return response.data;
     }
 };
