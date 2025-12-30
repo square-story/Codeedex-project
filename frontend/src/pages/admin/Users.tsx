@@ -17,12 +17,16 @@ import { PERMISSIONS } from '../../utils/constants';
 import { Plus, User as UserIcon, Users as UsersIcon } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
+import LoadingView from '../../components/ui/LoadingView';
+import ErrorView from '../../components/ui/ErrorView';
+import EmptyState from '../../components/ui/EmptyState';
 
 const Users: React.FC = () => {
     const [users, setUsers] = useState<IUser[]>([]);
     const [roles, setRoles] = useState<IRole[]>([]);
     const [teams, setTeams] = useState<ITeam[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const { permissions } = useAuth();
 
     useEffect(() => {
@@ -30,6 +34,8 @@ const Users: React.FC = () => {
     }, []);
 
     const fetchData = async () => {
+        setLoading(true);
+        setError(null);
         try {
             const [usersRes, rolesRes, teamsRes] = await Promise.all([
                 usersApi.getUsers(),
@@ -39,8 +45,9 @@ const Users: React.FC = () => {
             setUsers(usersRes.data.users);
             setRoles(rolesRes.data.roles);
             setTeams(teamsRes.data.teams);
-        } catch (error) {
-            console.error('Error fetching data:', error);
+        } catch (err: any) {
+            console.error('Error fetching data:', err);
+            setError(err.response?.data?.message || 'Failed to load user management data.');
         } finally {
             setLoading(false);
         }
@@ -71,7 +78,18 @@ const Users: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                     {loading ? (
-                        <div className="py-10 text-center text-gray-500">Loading users...</div>
+                        <LoadingView message="Loading user directory..." />
+                    ) : error ? (
+                        <ErrorView
+                            message={error}
+                            onRetry={fetchData}
+                            title="Failed to Load Users"
+                        />
+                    ) : users.length === 0 ? (
+                        <EmptyState
+                            title="No Users Registered"
+                            description="There are currently no users in the system matches your view scope."
+                        />
                     ) : (
                         <Table>
                             <TableHeader>
@@ -83,50 +101,42 @@ const Users: React.FC = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {users.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="text-center py-10 text-gray-500">
-                                            No users found.
+                                {users.map((user) => (
+                                    <TableRow key={user._id}>
+                                        <TableCell>
+                                            <div className="flex flex-col">
+                                                <span className="font-medium flex items-center gap-2">
+                                                    <UserIcon className="w-4 h-4 text-gray-400" />
+                                                    {user.email}
+                                                </span>
+                                                <span className="text-xs text-gray-400 pl-6">ID: {user._id}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex gap-1 flex-wrap">
+                                                {user.roles.map(roleId => {
+                                                    const role = roles.find(r => r._id === roleId);
+                                                    return role ? (
+                                                        <Badge key={roleId} variant="secondary">
+                                                            {role.name}
+                                                        </Badge>
+                                                    ) : null;
+                                                })}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                <UsersIcon className="w-4 h-4 text-gray-400" />
+                                                {getTeamName(user.teamId)}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="ghost" size="sm">
+                                                Edit
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
-                                ) : (
-                                    users.map((user) => (
-                                        <TableRow key={user._id}>
-                                            <TableCell>
-                                                <div className="flex flex-col">
-                                                    <span className="font-medium flex items-center gap-2">
-                                                        <UserIcon className="w-4 h-4 text-gray-400" />
-                                                        {user.email}
-                                                    </span>
-                                                    <span className="text-xs text-gray-400 pl-6">ID: {user._id}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex gap-1 flex-wrap">
-                                                    {user.roles.map(roleId => {
-                                                        const role = roles.find(r => r._id === roleId);
-                                                        return role ? (
-                                                            <Badge key={roleId} variant="secondary">
-                                                                {role.name}
-                                                            </Badge>
-                                                        ) : null;
-                                                    })}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center gap-2">
-                                                    <UsersIcon className="w-4 h-4 text-gray-400" />
-                                                    {getTeamName(user.teamId)}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <Button variant="ghost" size="sm">
-                                                    Edit
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
+                                ))}
                             </TableBody>
                         </Table>
                     )}

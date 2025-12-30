@@ -10,8 +10,11 @@ import {
     TableRow
 } from '../../components/ui/table';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../../components/ui/card';
-import { User as UserIcon, ShieldAlert } from 'lucide-react';
+import { User as UserIcon } from 'lucide-react';
 import { useAuth } from '../../auth/useAuth';
+import LoadingView from '../../components/ui/LoadingView';
+import ErrorView from '../../components/ui/ErrorView';
+import EmptyState from '../../components/ui/EmptyState';
 
 const UserPanel: React.FC = () => {
     const [users, setUsers] = useState<IUser[]>([]);
@@ -20,20 +23,22 @@ const UserPanel: React.FC = () => {
     const { user: currentUser } = useAuth();
 
     useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const response = await usersApi.getUsers();
-                setUsers(response.data.users);
-            } catch (err: any) {
-                console.error('Error fetching users:', err);
-                setError(err.response?.data?.message || 'Failed to load user data.');
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchUsers();
     }, []);
+
+    const fetchUsers = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await usersApi.getUsers();
+            setUsers(response.data.users);
+        } catch (err: any) {
+            console.error('Error fetching users:', err);
+            setError(err.response?.data?.message || 'Failed to load user data.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -44,66 +49,60 @@ const UserPanel: React.FC = () => {
                 </p>
             </div>
 
-            {error ? (
-                <Card className="border-red-200 bg-red-50">
-                    <CardContent className="pt-6 flex items-center gap-3 text-red-700">
-                        <ShieldAlert className="w-5 h-5 shrink-0" />
-                        <p>{error}</p>
-                    </CardContent>
-                </Card>
-            ) : (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>People</CardTitle>
-                        <CardDescription>
-                            Data visibility is automatically filtered based on your permissions.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {loading ? (
-                            <div className="py-10 text-center text-gray-500">Loading directory...</div>
-                        ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>User Email</TableHead>
-                                        <TableHead>Account Status</TableHead>
-                                        <TableHead className="text-right">Relationship</TableHead>
+            <Card>
+                <CardHeader>
+                    <CardTitle>People</CardTitle>
+                    <CardDescription>
+                        Data visibility is automatically filtered based on your permissions.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {loading ? (
+                        <LoadingView message="Retrieving directory..." />
+                    ) : error ? (
+                        <ErrorView
+                            message={error}
+                            onRetry={fetchUsers}
+                            title="Directory Sync Failed"
+                        />
+                    ) : users.length === 0 ? (
+                        <EmptyState
+                            title="No Members Found"
+                            description="You don't have access to any other user records at this time."
+                        />
+                    ) : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>User Email</TableHead>
+                                    <TableHead>Account Status</TableHead>
+                                    <TableHead className="text-right">Relationship</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {users.map((user) => (
+                                    <TableRow key={user._id} className={user._id === currentUser?._id ? 'bg-blue-50/50' : ''}>
+                                        <TableCell className="font-medium">
+                                            <div className="flex items-center gap-2">
+                                                <UserIcon className="w-4 h-4 text-gray-400" />
+                                                {user.email}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                                                Active
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-right text-gray-400 text-sm">
+                                            {user._id === currentUser?._id ? 'You' : 'Member'}
+                                        </TableCell>
                                     </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {users.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan={3} className="text-center py-10 text-gray-500">
-                                                No users found.
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        users.map((user) => (
-                                            <TableRow key={user._id} className={user._id === currentUser?._id ? 'bg-blue-50/50' : ''}>
-                                                <TableCell className="font-medium">
-                                                    <div className="flex items-center gap-2">
-                                                        <UserIcon className="w-4 h-4 text-gray-400" />
-                                                        {user.email}
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-                                                        Active
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell className="text-right text-gray-400 text-sm">
-                                                    {user._id === currentUser?._id ? 'You' : 'Member'}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        )}
-                    </CardContent>
-                </Card>
-            )}
+                                ))}
+                            </TableBody>
+                        </Table>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     );
 };

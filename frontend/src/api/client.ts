@@ -27,12 +27,18 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        const status = error.response?.status;
+
+        if (status === 401) {
             // Clear storage and redirect to login/reload
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             window.location.href = "/login";
+        } else if (status === 403) {
+            console.error("Access Forbidden: You do not have permission for this action.");
+            window.location.href = "/access-denied";
         }
+
         return Promise.reject(error);
     }
 );

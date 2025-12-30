@@ -11,6 +11,9 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { History, User as UserIcon, Box } from 'lucide-react';
+import LoadingView from '../../components/ui/LoadingView';
+import ErrorView from '../../components/ui/ErrorView';
+import EmptyState from '../../components/ui/EmptyState';
 
 interface AuditLog {
     _id: string;
@@ -27,17 +30,21 @@ interface AuditLog {
 const AuditLogs: React.FC = () => {
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         fetchLogs();
     }, []);
 
     const fetchLogs = async () => {
+        setLoading(true);
+        setError(null);
         try {
             const response = await adminApi.getAuditLogs();
             setLogs(response.data.logs);
-        } catch (error) {
-            console.error('Error fetching audit logs:', error);
+        } catch (err: any) {
+            console.error('Error fetching audit logs:', err);
+            setError(err.response?.data?.message || 'Failed to retrive immutable audit logs.');
         } finally {
             setLoading(false);
         }
@@ -62,7 +69,18 @@ const AuditLogs: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                     {loading ? (
-                        <div className="py-10 text-center text-gray-500">Loading logs...</div>
+                        <LoadingView message="Scanning system logs..." />
+                    ) : error ? (
+                        <ErrorView
+                            message={error}
+                            onRetry={fetchLogs}
+                            title="Log Retrieval Failed"
+                        />
+                    ) : logs.length === 0 ? (
+                        <EmptyState
+                            title="No Logs Available"
+                            description="The system audit log is currently empty. Activities will appear as users interact with protected resources."
+                        />
                     ) : (
                         <Table>
                             <TableHeader>
@@ -75,45 +93,37 @@ const AuditLogs: React.FC = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {logs.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-10 text-gray-500">
-                                            No audit logs found.
+                                {logs.map((log) => (
+                                    <TableRow key={log._id}>
+                                        <TableCell className="text-sm font-mono text-gray-500">
+                                            {new Date(log.createdAt).toLocaleString()}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                <UserIcon className="w-4 h-4 text-gray-400" />
+                                                <span className="text-sm">
+                                                    {typeof log.performedBy === 'object' ? log.performedBy.email : log.performedBy}
+                                                </span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant="outline" className="uppercase text-[10px] font-bold">
+                                                {formatAction(log.action)}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                <Box className="w-3 h-3" />
+                                                {log.targetResource}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <pre className="text-[10px] bg-gray-50 p-2 rounded max-w-xs overflow-auto">
+                                                {JSON.stringify(log.details, null, 2)}
+                                            </pre>
                                         </TableCell>
                                     </TableRow>
-                                ) : (
-                                    logs.map((log) => (
-                                        <TableRow key={log._id}>
-                                            <TableCell className="text-sm font-mono text-gray-500">
-                                                {new Date(log.createdAt).toLocaleString()}
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center gap-2">
-                                                    <UserIcon className="w-4 h-4 text-gray-400" />
-                                                    <span className="text-sm">
-                                                        {typeof log.performedBy === 'object' ? log.performedBy.email : log.performedBy}
-                                                    </span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant="outline" className="uppercase text-[10px] font-bold">
-                                                    {formatAction(log.action)}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                    <Box className="w-3 h-3" />
-                                                    {log.targetResource}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <pre className="text-[10px] bg-gray-50 p-2 rounded max-w-xs overflow-auto">
-                                                    {JSON.stringify(log.details, null, 2)}
-                                                </pre>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
+                                ))}
                             </TableBody>
                         </Table>
                     )}
