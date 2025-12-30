@@ -4,6 +4,7 @@ import { Team } from '../models/Team';
 import { Role } from '../models/Role';
 import { User } from '../models/User';
 import { AuditLog } from '../models/AuditLog';
+import bcrypt from 'bcryptjs';
 
 import { PERMISSIONS, SCOPES } from '../permissions/constants';
 

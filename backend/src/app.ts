@@ -12,6 +12,11 @@ app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
+import authRoutes from './auth/auth.routes';
+
+// Routes
+app.use('/auth', authRoutes);
+
 // Test Route / Health Check
 app.get('/health', (req: Request, res: Response) => {
     res.status(200).json({
