@@ -14,9 +14,12 @@ import AccessDenied from './pages/AccessDenied';
 import Users from './pages/admin/Users';
 import Roles from './pages/admin/Roles';
 import AuditLogs from './pages/admin/AuditLogs';
+import UserDashboard from './pages/user/Dashboard';
+import Profile from './pages/user/Profile';
+import UserPanel from './pages/user/UserPanel';
 
 // Temporary Dashboard components until specific pages are built
-const Dashboard = () => (
+const AdminDashboard = () => (
   <div className="space-y-4">
     <h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
     <p className="text-muted-foreground">Welcome to the administrative control center.</p>
@@ -47,6 +50,9 @@ const router = createBrowserRouter([
         element: <UserLayout />,
         children: [
           { index: true, element: <Home /> },
+          { path: 'dashboard', element: <UserDashboard /> },
+          { path: 'profile', element: <Profile /> },
+          { path: 'directory', element: <UserPanel /> },
         ],
       },
       {
@@ -56,7 +62,7 @@ const router = createBrowserRouter([
           {
             element: <AdminLayout />,
             children: [
-              { index: true, element: <Dashboard /> },
+              { index: true, element: <AdminDashboard /> },
               {
                 path: 'users',
                 element: <PermissionRoute permissionKey={PERMISSIONS.USERS_READ} />,
