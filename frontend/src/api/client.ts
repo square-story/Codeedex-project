@@ -36,7 +36,7 @@ apiClient.interceptors.response.use(
             window.location.href = "/login";
         } else if (status === 403) {
             console.error("Access Forbidden: You do not have permission for this action.");
-            window.location.href = "/access-denied";
+            // window.location.href = "/access-denied";
         }
 
         return Promise.reject(error);
