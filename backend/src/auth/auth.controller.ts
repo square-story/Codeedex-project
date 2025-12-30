@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from './auth.service';
 import { AppError } from '../middleware/errorHandler';
+import { resolveUserPermissions } from '../permissions/permission.service';
 
 export class AuthController {
     private static instance: AuthController;
@@ -23,6 +24,7 @@ export class AuthController {
             }
 
             const { token, user } = await authService.login(email, password);
+            const permissions = await resolveUserPermissions(user._id.toString());
 
             // Send token in cookie (optional but good for security)
             res.cookie('token', token, {
@@ -36,6 +38,7 @@ export class AuthController {
                 token,
                 data: {
                     user,
+                    permissions,
                 },
             });
         } catch (err) {
@@ -50,10 +53,13 @@ export class AuthController {
                 throw new AppError('User not found in request', 401);
             }
 
+            const permissions = await resolveUserPermissions(req.user.userId);
+
             res.status(200).json({
                 success: true,
                 data: {
                     user: req.user,
+                    permissions,
                 },
             });
         } catch (err) {
