@@ -43,7 +43,10 @@ export class UserController {
 
     public createUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const user = await userService.createUser(req.body);
+            if (!req.user || !req.user.userId) {
+                throw new AppError('User not authenticated', 401);
+            }
+            const user = await userService.createUser(req.body, req.user.userId);
 
             res.status(201).json({
                 success: true,
@@ -56,7 +59,10 @@ export class UserController {
 
     public updateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const user = await userService.updateUser(req.params.id, req.body);
+            if (!req.user || !req.user.userId) {
+                throw new AppError('User not authenticated', 401);
+            }
+            const user = await userService.updateUser(req.params.id, req.body, req.user.userId);
 
             if (!user) {
                 return next(new AppError('No user found with that ID', 404));

@@ -1,6 +1,7 @@
 import { User, IUser } from '../models/User';
 import { SCOPES } from '../permissions/constants';
 import { AppError } from '../middleware/errorHandler';
+import { auditService } from '../audit/audit.service';
 
 export class UserService {
     private static instance: UserService;
@@ -50,7 +51,7 @@ export class UserService {
         return User.find(query).select('-passwordHash');
     }
 
-    public async createUser(data: any): Promise<IUser> {
+    public async createUser(data: any, performedBy: string): Promise<IUser> {
         // Handle password mapping
         if (data.password) {
             data.passwordHash = data.password;
@@ -59,28 +60,21 @@ export class UserService {
 
         const user = await User.create(data);
         user.passwordHash = undefined as any; // Don't return password
+
+        await auditService.recordAudit(performedBy, 'USER_CREATED', `User:${user._id}`, { email: user.email });
+
         return user;
     }
 
-    public async updateUser(userId: string, data: Partial<IUser>): Promise<IUser | null> {
-        // If updating password, we rely on the pre-save hook, so we need to retrieve, modify, and save.
-        // However, for simple updates like roles/teams, findOneAndUpdate is more efficient if not touching password.
-        // But since we might update roles/teams which are sensitive, let's treat it standard.
-        // For now, let's use findOneAndUpdate for non-password fields for simplicity,
-        // assuming password updates go through a specific 'change-password' flow or similar,
-        // BUT common admin update might not include password.
-
-        // Actually, to be safe and leverage validation, let's use find -> save pattern if strictly needed,
-        // but for administrative updates (roles, teams), findOneAndUpdate is fine.
-
-        // IMPORTANT: If we want to support password update here, we must use save().
-        // Let's stick to findByIdAndUpdate for now as it returns the new doc suitable for response.
-        // Note: The pre-save hook for password hash ONLY works on save(), not update.
-
+    public async updateUser(userId: string, data: Partial<IUser>, performedBy: string): Promise<IUser | null> {
         const user = await User.findByIdAndUpdate(userId, data, {
             new: true,
             runValidators: true,
         }).select('-passwordHash');
+
+        if (user) {
+            await auditService.recordAudit(performedBy, 'USER_UPDATED', `User:${user._id}`, { updates: Object.keys(data) });
+        }
 
         return user;
     }

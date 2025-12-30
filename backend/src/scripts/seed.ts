@@ -40,6 +40,7 @@ const seed = async () => {
                 { permissionKey: PERMISSIONS.ROLES_CREATE, scope: SCOPES.GLOBAL },
                 { permissionKey: PERMISSIONS.ROLES_UPDATE, scope: SCOPES.GLOBAL },
                 { permissionKey: PERMISSIONS.ROLES_DELETE, scope: SCOPES.GLOBAL },
+                { permissionKey: PERMISSIONS.AUDIT_READ, scope: SCOPES.GLOBAL },
             ],
         });
 

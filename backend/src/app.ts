@@ -17,11 +17,13 @@ app.use(cookieParser());
 import authRoutes from './auth/auth.routes';
 import userRoutes from './users/user.routes';
 import roleRoutes from './roles/role.routes';
+import auditRoutes from './audit/audit.routes';
 
 // Routes
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/roles', roleRoutes);
+app.use('/audit-logs', auditRoutes);
 
 // Test Route / Health Check
 app.get('/health', (req: Request, res: Response) => {

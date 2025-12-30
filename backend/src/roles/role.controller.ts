@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { roleService } from './role.service';
+import { AppError } from '../middleware/errorHandler';
 
 export class RoleController {
     private static instance: RoleController;
@@ -15,7 +16,10 @@ export class RoleController {
 
     public createRole = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const role = await roleService.createRole(req.body);
+            if (!req.user || !req.user.userId) {
+                throw new AppError('User not authenticated', 401);
+            }
+            const role = await roleService.createRole(req.body, req.user.userId);
 
             res.status(201).json({
                 success: true,

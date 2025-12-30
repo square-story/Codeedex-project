@@ -1,4 +1,5 @@
 import { Role, IRole } from '../models/Role';
+import { auditService } from '../audit/audit.service';
 
 export class RoleService {
     private static instance: RoleService;
@@ -12,8 +13,9 @@ export class RoleService {
         return RoleService.instance;
     }
 
-    public async createRole(data: Partial<IRole>): Promise<IRole> {
+    public async createRole(data: Partial<IRole>, performedBy: string): Promise<IRole> {
         const role = await Role.create(data);
+        await auditService.recordAudit(performedBy, 'ROLE_CREATED', `Role:${role._id}`, { name: role.name });
         return role;
     }
 
