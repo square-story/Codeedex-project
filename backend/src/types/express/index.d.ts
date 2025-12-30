@@ -8,6 +8,7 @@ declare global {
                 roles: string[];
                 teamId: string | null;
             };
+            permissionScope?: string;
         }
     }
 }

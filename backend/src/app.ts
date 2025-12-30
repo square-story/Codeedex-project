@@ -3,6 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { errorHandler, AppError } from './middleware/errorHandler';
+// Force model registration
+import './models/Role';
 
 const app = express();
 

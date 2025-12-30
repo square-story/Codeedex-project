@@ -37,7 +37,7 @@ const seed = async () => {
         // Create User
         const user = await User.create({
             email: 'admin@example.com',
-            passwordHash: 'hashedpassword123',
+            passwordHash: 'password123',
             roles: [adminRole._id],
             teamId: engineeringTeam._id,
             directPermissions: [],
