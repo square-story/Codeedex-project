@@ -15,9 +15,11 @@ app.use(express.json());
 app.use(cookieParser());
 
 import authRoutes from './auth/auth.routes';
+import userRoutes from './users/user.routes';
 
 // Routes
 app.use('/auth', authRoutes);
+app.use('/users', userRoutes);
 
 // Test Route / Health Check
 app.get('/health', (req: Request, res: Response) => {

@@ -23,43 +23,76 @@ const seed = async () => {
 
         console.log('🧹 Cleaned DB');
 
-        // Create Team
+        // Create Teams
         const engineeringTeam = await Team.create({ name: 'Engineering' });
-        console.log('✅ Team Created:', engineeringTeam.name);
+        const marketingTeam = await Team.create({ name: 'Marketing' });
+        console.log('✅ Teams Created');
 
-        // Create Role
+        // Create Roles
         const adminRole = await Role.create({
             name: 'Admin',
             permissions: [{ permissionKey: PERMISSIONS.USERS_READ, scope: SCOPES.GLOBAL }],
         });
-        console.log('✅ Role Created:', adminRole.name);
 
-        // Create User
-        const user = await User.create({
+        const managerRole = await Role.create({
+            name: 'Manager',
+            permissions: [{ permissionKey: PERMISSIONS.USERS_READ, scope: SCOPES.TEAM }],
+        });
+
+        const employeeRole = await Role.create({
+            name: 'Employee',
+            permissions: [{ permissionKey: PERMISSIONS.USERS_READ, scope: SCOPES.SELF }],
+        });
+        console.log('✅ Roles Created');
+
+        // Create Users
+
+        // Admin (Engineering)
+        await User.create({
             email: 'admin@example.com',
             passwordHash: 'password123',
             roles: [adminRole._id],
             teamId: engineeringTeam._id,
             directPermissions: [],
         });
-        console.log('✅ User Created:', user.email);
+
+        // Manager (Engineering)
+        await User.create({
+            email: 'manager@example.com',
+            passwordHash: 'password123',
+            roles: [managerRole._id],
+            teamId: engineeringTeam._id,
+            directPermissions: [],
+        });
+
+        // Employee (Engineering)
+        await User.create({
+            email: 'employee@example.com',
+            passwordHash: 'password123',
+            roles: [employeeRole._id],
+            teamId: engineeringTeam._id,
+            directPermissions: [],
+        });
+
+        // Employee (Marketing) - Should not be visible to Engineering Manager
+        await User.create({
+            email: 'marketer@example.com',
+            passwordHash: 'password123',
+            roles: [employeeRole._id],
+            teamId: marketingTeam._id,
+            directPermissions: [],
+        });
+
+        console.log('✅ Users Created');
 
         // Create Audit Log
-        const log = await AuditLog.create({
-            action: 'USER_CREATED',
-            performedBy: user._id,
+        await AuditLog.create({
+            action: 'SYSTEM_INIT',
+            performedBy: (await User.findOne({ email: 'admin@example.com' }))?._id,
             targetResource: 'system',
-            details: { foo: 'bar' },
+            details: { init: true },
         });
-        console.log('✅ Audit Log Created:', log.action);
-
-        // Verify Audit Log Immutability
-        try {
-            log.details = { foo: 'baz' };
-            await log.save();
-        } catch (err: any) {
-            console.log('✅ Immutability Check Passed: Update prevented on AuditLog');
-        }
+        console.log('✅ Audit Log Created');
 
     } catch (error) {
         console.error('❌ Error seeding:', error);

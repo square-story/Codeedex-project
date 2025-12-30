@@ -26,27 +26,18 @@ const UserSchema: Schema = new Schema(
 
 // Explicitly casting to any to avoid TypeScript overload issues
 (UserSchema as any).pre('save', async function (this: any) {
-    console.log('HOOK: Saving user, isModified(passwordHash):', this.isModified('passwordHash'));
-    console.log('HOOK: Current passwordHash value:', this.passwordHash);
-
     if (!this.isModified('passwordHash')) return;
 
     try {
         const salt = await bcrypt.genSalt(10);
         this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
-        console.log('HOOK: Hashed password:', this.passwordHash);
     } catch (err: any) {
-        console.error('HOOK: Error hashing password:', err);
         throw err;
     }
 });
 
 UserSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
-    console.log('COMPARE: Candidate:', candidatePassword);
-    console.log('COMPARE: Stored Hash:', this.passwordHash);
-    const match = await bcrypt.compare(candidatePassword, this.passwordHash);
-    console.log('COMPARE: Match result:', match);
-    return match;
+    return bcrypt.compare(candidatePassword, this.passwordHash);
 };
 
 export const User = mongoose.model<IUser>('User', UserSchema);

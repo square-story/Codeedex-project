@@ -10,7 +10,6 @@ export const requirePermission = (permissionKey: string) => {
             }
 
             const permissions = await resolveUserPermissions(req.user.userId);
-            console.log(permissions)
             const matchedPermission = permissions.find((p) => p.key === permissionKey);
 
             if (!matchedPermission) {
