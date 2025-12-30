@@ -25,11 +25,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
         return next(new AppError('Not authorized to access this route', 401));
     }
 
-    try {
-        const decoded = jwt.verify(token, config.JWT_SECRET) as JwtPayload;
-        req.user = decoded;
-        next();
-    } catch (err) {
-        return next(new AppError('Not authorized to access this route', 401));
-    }
+    const decoded = jwt.verify(token, config.JWT_SECRET) as JwtPayload;
+    req.user = decoded;
+    next();
 };
