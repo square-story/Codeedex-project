@@ -40,6 +40,36 @@ export class UserController {
             next(err);
         }
     };
+
+    public createUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const user = await userService.createUser(req.body);
+
+            res.status(201).json({
+                success: true,
+                data: { user }
+            });
+        } catch (err) {
+            next(err);
+        }
+    };
+
+    public updateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const user = await userService.updateUser(req.params.id, req.body);
+
+            if (!user) {
+                return next(new AppError('No user found with that ID', 404));
+            }
+
+            res.status(200).json({
+                success: true,
+                data: { user }
+            });
+        } catch (err) {
+            next(err);
+        }
+    };
 }
 
 export const userController = UserController.getInstance();

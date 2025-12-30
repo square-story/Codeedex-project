@@ -31,7 +31,16 @@ const seed = async () => {
         // Create Roles
         const adminRole = await Role.create({
             name: 'Admin',
-            permissions: [{ permissionKey: PERMISSIONS.USERS_READ, scope: SCOPES.GLOBAL }],
+            permissions: [
+                { permissionKey: PERMISSIONS.USERS_READ, scope: SCOPES.GLOBAL },
+                { permissionKey: PERMISSIONS.USERS_CREATE, scope: SCOPES.GLOBAL },
+                { permissionKey: PERMISSIONS.USERS_UPDATE, scope: SCOPES.GLOBAL },
+                { permissionKey: PERMISSIONS.USERS_DELETE, scope: SCOPES.GLOBAL },
+                { permissionKey: PERMISSIONS.ROLES_READ, scope: SCOPES.GLOBAL },
+                { permissionKey: PERMISSIONS.ROLES_CREATE, scope: SCOPES.GLOBAL },
+                { permissionKey: PERMISSIONS.ROLES_UPDATE, scope: SCOPES.GLOBAL },
+                { permissionKey: PERMISSIONS.ROLES_DELETE, scope: SCOPES.GLOBAL },
+            ],
         });
 
         const managerRole = await Role.create({

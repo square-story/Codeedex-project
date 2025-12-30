@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { userController } from './user.controller';
+import { roleController } from './role.controller';
 import { requireAuth } from '../middleware/requireAuth';
 import { requirePermission } from '../middleware/requirePermission';
 import { PERMISSIONS } from '../permissions/constants';
@@ -9,22 +9,16 @@ const router = Router();
 // Protect all routes
 router.use(requireAuth);
 
-router.get(
-    '/',
-    requirePermission(PERMISSIONS.USERS_READ),
-    userController.getAllUsers
-);
-
 router.post(
     '/',
-    requirePermission(PERMISSIONS.USERS_CREATE),
-    userController.createUser
+    requirePermission(PERMISSIONS.ROLES_CREATE),
+    roleController.createRole
 );
 
-router.put(
-    '/:id',
-    requirePermission(PERMISSIONS.USERS_UPDATE),
-    userController.updateUser
+router.get(
+    '/',
+    requirePermission(PERMISSIONS.ROLES_READ),
+    roleController.getAllRoles
 );
 
 export default router;
